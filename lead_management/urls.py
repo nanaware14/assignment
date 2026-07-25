@@ -21,8 +21,7 @@ urlpatterns = [
         name="logout",
     ),
 
-    # Django Allauth (Google Login)
-    path("accounts/", include("allauth.urls")),
+  
 
     # CRM App URLs
     path("", include("crm.urls")),
