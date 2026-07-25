@@ -7,3 +7,4 @@ psycopg[binary]==3.3.4
 whitenoise==6.7.0
 python-dotenv==1.0.1
 django-allauth==65.10.0
+requests==2.32.4
