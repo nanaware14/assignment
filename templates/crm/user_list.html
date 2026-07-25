@@ -1,0 +1,844 @@
+{% extends "base.html" %}
+
+{% block title %}Users | LeadCRM{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ══════════════════════════════════════
+     Page Header
+     ══════════════════════════════════════ */
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .page-header h1 {
+    color: var(--fg);
+    font-size: clamp(1.5rem, 3vw, 1.9rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin: 0 0 0.3rem;
+  }
+
+  .page-header p {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .page-header .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.3rem;
+    border: none;
+    border-radius: 10px;
+    color: var(--bg-deep);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 20px var(--accent-glow);
+    flex-shrink: 0;
+  }
+
+  .page-header .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.22) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  .page-header .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(232, 168, 56, 0.4);
+  }
+
+  .page-header .btn-primary:hover::before {
+    transform: translateX(100%);
+  }
+
+  .page-header .btn-primary:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 10px var(--accent-glow);
+  }
+
+  /* ══════════════════════════════════════
+     Section Panel
+     ══════════════════════════════════════ */
+  .section-panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+  }
+
+  /* ══════════════════════════════════════
+     Search Bar
+     ══════════════════════════════════════ */
+  .search-bar {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.01);
+  }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-wrap .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--fg-dim);
+    font-size: 0.9rem;
+    pointer-events: none;
+    transition: color 0.3s ease;
+  }
+
+  .search-wrap:focus-within .search-icon {
+    color: var(--accent);
+  }
+
+  .search-wrap .form-control {
+    width: 100%;
+    padding: 0.6rem 0.9rem 0.6rem 2.5rem;
+    background: var(--input-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--fg);
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .search-wrap .form-control::placeholder {
+    color: rgba(138, 141, 155, 0.4);
+  }
+
+  .search-wrap .form-control:focus {
+    border-color: var(--border-focus);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 0 0 3px rgba(232, 168, 56, 0.1),
+      0 0 16px -5px var(--accent-glow);
+  }
+
+  .btn-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.15rem;
+    border: none;
+    border-radius: 10px;
+    color: var(--bg-deep);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 3px 14px var(--accent-glow);
+  }
+
+  .btn-search:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(232, 168, 56, 0.35);
+  }
+
+  .btn-search:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .btn-search i {
+    font-size: 0.8rem;
+  }
+
+  /* Clear button */
+  .btn-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.6rem 0.85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--fg-muted);
+    background: transparent;
+    font-size: 0.82rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+  }
+
+  .btn-clear:hover {
+    color: var(--fg);
+    border-color: rgba(255, 255, 255, 0.12);
+    background: var(--bg-surface);
+  }
+
+  /* ══════════════════════════════════════
+     Table
+     ══════════════════════════════════════ */
+  .section-panel .table {
+    margin: 0;
+    color: var(--fg);
+  }
+
+  .section-panel .table thead th {
+    color: var(--fg-dim);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    padding: 0.8rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.008);
+    white-space: nowrap;
+  }
+
+  .section-panel .table tbody td {
+    padding: 0.9rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.875rem;
+    vertical-align: middle;
+    transition: background 0.2s ease;
+  }
+
+  .section-panel .table tbody tr {
+    transition: background 0.25s ease;
+    animation: row-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .section-panel .table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .section-panel .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ── User cell: avatar + name ── */
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--bg-deep);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  /* Deterministic color based on first char */
+  .user-avatar.char-a { background: linear-gradient(135deg, #e8a838, #f0be5e); }
+  .user-avatar.char-b { background: linear-gradient(135deg, #5eaeff, #3898e8); }
+  .user-avatar.char-c { background: linear-gradient(135deg, #38c97a, #2aad64); }
+  .user-avatar.char-d { background: linear-gradient(135deg, #b888ff, #9670e0); }
+  .user-avatar.char-e { background: linear-gradient(135deg, #ff7e7e, #e06060); }
+  .user-avatar.char-f { background: linear-gradient(135deg, #ffbe5e, #e0a040); }
+  .user-avatar.char-g { background: linear-gradient(135deg, #5ee8c9, #40c0a4); }
+  .user-avatar.char-h { background: linear-gradient(135deg, #ff8eb8, #e07098); }
+  .user-avatar.char-i { background: linear-gradient(135deg, #a0b8ff, #7898e0); }
+  .user-avatar.char-j { background: linear-gradient(135deg, #c8e05e, #a8c040); }
+  .user-avatar.char-k { background: linear-gradient(135deg, #e0885e, #c07040); }
+  .user-avatar.char-l { background: linear-gradient(135deg, #5ec8e8, #40a8c0); }
+  .user-avatar.char-m { background: linear-gradient(135deg, #e05e8e, #c04070); }
+  .user-avatar.char-n { background: linear-gradient(135deg, #8ee05e, #70c040); }
+  .user-avatar.char-o { background: linear-gradient(135deg, #e0c85e, #c0a840); }
+  .user-avatar.char-p { background: linear-gradient(135deg, #5e78ff, #4058e0); }
+  .user-avatar.char-q { background: linear-gradient(135deg, #c85ee0, #a840c0); }
+  .user-avatar.char-r { background: linear-gradient(135deg, #ff5e5e, #e04040); }
+  .user-avatar.char-s { background: linear-gradient(135deg, #5effb8, #40e098); }
+  .user-avatar.char-t { background: linear-gradient(135deg, #e0a85e, #c08840); }
+  .user-avatar.char-u { background: linear-gradient(135deg, #785eff, #5840e0); }
+  .user-avatar.char-v { background: linear-gradient(135deg, #5ee0e0, #40c0c0); }
+  .user-avatar.char-w { background: linear-gradient(135deg, #e05eb8, #c04098); }
+  .user-avatar.char-x { background: linear-gradient(135deg, #b8b8b8, #989898); }
+  .user-avatar.char-y { background: linear-gradient(135deg, #e0e05e, #c0c040); }
+  .user-avatar.char-z { background: linear-gradient(135deg, #5e9eff, #4078e0); }
+  .user-avatar.char-default { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); }
+
+  /* Online indicator dot */
+  .user-avatar::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-surface);
+    transition: background 0.3s ease;
+  }
+
+  tr:hover .user-avatar::after {
+    border-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .user-avatar.online::after {
+    background: var(--success);
+    box-shadow: 0 0 6px rgba(56, 201, 122, 0.4);
+  }
+
+  .user-avatar.offline::after {
+    background: var(--fg-dim);
+    opacity: 0.4;
+  }
+
+  .user-info .user-name {
+    display: block;
+    color: var(--fg);
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+
+  .user-info .user-fullname {
+    display: block;
+    color: var(--fg-dim);
+    font-size: 0.78rem;
+    font-weight: 400;
+    line-height: 1.3;
+    margin-top: 1px;
+  }
+
+  /* Email column */
+  .section-panel .table tbody td:nth-child(2) {
+    color: var(--fg-muted);
+    font-size: 0.84rem;
+  }
+
+  /* ── Role Badge ── */
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+    border: 1px solid;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .role-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Admin */
+  .role-admin {
+    background: rgba(232, 168, 56, 0.08);
+    border-color: rgba(232, 168, 56, 0.2);
+    color: var(--accent);
+  }
+  .role-admin::before {
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+
+  /* Manager */
+  .role-manager {
+    background: rgba(168, 120, 255, 0.08);
+    border-color: rgba(168, 120, 255, 0.2);
+    color: #b888ff;
+  }
+  .role-manager::before {
+    background: #b888ff;
+    box-shadow: 0 0 6px rgba(168, 120, 255, 0.3);
+  }
+
+  /* Member */
+  .role-member {
+    background: rgba(56, 152, 232, 0.08);
+    border-color: rgba(56, 152, 232, 0.2);
+    color: #5eaeff;
+  }
+  .role-member::before {
+    background: #5eaeff;
+    box-shadow: 0 0 6px rgba(56, 152, 232, 0.3);
+  }
+
+  /* ── Status Badge ── */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border: 1px solid;
+    line-height: 1.4;
+    text-transform: capitalize;
+    white-space: nowrap;
+  }
+
+  .status-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-active {
+    background: rgba(56, 201, 122, 0.08);
+    border-color: rgba(56, 201, 122, 0.2);
+    color: var(--success);
+  }
+  .status-active::before {
+    background: var(--success);
+    box-shadow: 0 0 6px rgba(56, 201, 122, 0.3);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .status-inactive {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--fg-dim);
+  }
+  .status-inactive::before {
+    background: var(--fg-dim);
+    opacity: 0.5;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 4px rgba(56, 201, 122, 0.2); }
+    50%      { box-shadow: 0 0 10px rgba(56, 201, 122, 0.5); }
+  }
+
+  /* ── Edit button ── */
+  .btn-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.32rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--fg-muted);
+    background: transparent;
+    font-size: 0.78rem;
+    font-weight: 500;
+    font-family: inherit;
+    text-decoration: none;
+    transition: all 0.25s ease;
+  }
+
+  .btn-edit i {
+    font-size: 0.72rem;
+    transition: transform 0.25s ease;
+  }
+
+  .btn-edit:hover {
+    color: var(--accent);
+    border-color: rgba(232, 168, 56, 0.35);
+    background: var(--accent-subtle);
+  }
+
+  .btn-edit:hover i {
+    transform: scale(1.15);
+  }
+
+  /* ── Empty state ── */
+  .table tbody td.empty-state {
+    text-align: center;
+    padding: 3.5rem 1.5rem !important;
+    color: var(--fg-dim);
+    font-size: 0.9rem;
+    font-weight: 400;
+    border-bottom: none !important;
+  }
+
+  .table tbody td.empty-state i {
+    display: block;
+    font-size: 2.25rem;
+    margin-bottom: 0.85rem;
+    color: var(--fg-dim);
+    opacity: 0.35;
+  }
+
+  /* Row stagger */
+  .section-panel .table tbody tr:nth-child(1)  { animation-delay: 0.2s; }
+  .section-panel .table tbody tr:nth-child(2)  { animation-delay: 0.26s; }
+  .section-panel .table tbody tr:nth-child(3)  { animation-delay: 0.32s; }
+  .section-panel .table tbody tr:nth-child(4)  { animation-delay: 0.38s; }
+  .section-panel .table tbody tr:nth-child(5)  { animation-delay: 0.44s; }
+  .section-panel .table tbody tr:nth-child(6)  { animation-delay: 0.5s; }
+  .section-panel .table tbody tr:nth-child(7)  { animation-delay: 0.56s; }
+  .section-panel .table tbody tr:nth-child(8)  { animation-delay: 0.62s; }
+  .section-panel .table tbody tr:nth-child(9)  { animation-delay: 0.68s; }
+  .section-panel .table tbody tr:nth-child(10) { animation-delay: 0.74s; }
+
+  /* ══════════════════════════════════════
+     Pagination
+     ══════════════════════════════════════ */
+  .pagination-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    gap: 1rem;
+  }
+
+  .pagination-info {
+    color: var(--fg-dim);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .pagination-info strong {
+    color: var(--fg-muted);
+    font-weight: 600;
+  }
+
+  .pagination {
+    margin: 0;
+    gap: 0.3rem;
+  }
+
+  .pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg-muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    font-family: inherit;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .pagination .page-link:hover {
+    background: var(--bg-surface);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--fg);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--accent-subtle);
+    border-color: rgba(232, 168, 56, 0.25);
+    color: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(232, 168, 56, 0.08);
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: var(--fg-dim);
+    opacity: 0.35;
+    pointer-events: none;
+    border-color: var(--border-light);
+  }
+
+  .pagination .page-link:focus-visible {
+    box-shadow: 0 0 0 2px rgba(232, 168, 56, 0.3);
+    outline: none;
+  }
+
+  .pagination .page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    color: var(--fg-dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ══════════════════════════════════════
+     Animations
+     ══════════════════════════════════════ */
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes row-in {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* ══════════════════════════════════════
+     Responsive
+     ══════════════════════════════════════ */
+  @media (max-width: 991.98px) {
+    .search-bar {
+      padding: 1rem 1.15rem;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .section-panel .table thead th,
+    .section-panel .table tbody td {
+      padding: 0.7rem 1rem;
+      font-size: 0.8rem;
+    }
+
+    .hide-mobile {
+      display: none;
+    }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      font-size: 0.78rem;
+      border-radius: 8px;
+    }
+
+    .pagination-wrap {
+      flex-direction: column;
+      padding: 0.85rem 1rem;
+    }
+
+    .pagination-info {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .search-bar {
+      padding: 0.85rem;
+    }
+
+    .section-panel .table thead th,
+    .section-panel .table tbody td {
+      padding: 0.6rem 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    .user-cell {
+      gap: 0.6rem;
+    }
+
+    .user-info .user-fullname {
+      display: none;
+    }
+  }
+
+  /* ══════════════════════════════════════
+     Reduced Motion
+     ══════════════════════════════════════ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <h1>Users</h1>
+    <p>Manage admin and member access.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'user_create' %}">
+    <i class="bi bi-person-plus"></i> New User
+  </a>
+</div>
+
+<!-- Users Table Panel -->
+<section class="section-panel">
+  <!-- Search Bar -->
+  <form class="search-bar" method="get">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <div class="search-wrap">
+          <i class="bi bi-search search-icon"></i>
+          <input class="form-control" name="q" value="{{ query }}" placeholder="Search by username, name, or email">
+        </div>
+      </div>
+      <div class="col-auto d-flex gap-2">
+        <button class="btn-search" type="submit">
+          <i class="bi bi-funnel"></i> Search
+        </button>
+        {% if query %}
+          <a class="btn-clear" href="?">
+            <i class="bi bi-x-lg"></i> Clear
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th style="width:240px">User</th>
+          <th class="hide-mobile">Email</th>
+          <th style="width:130px">Role</th>
+          <th style="width:110px">Status</th>
+          <th class="text-end" style="width:90px">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for managed_user in page_obj %}
+          {% with first_char=managed_user.username|slice:":1"|lower %}
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar {% if managed_user.is_active %}online{% else %}offline{% endif %} char-{{ first_char }}{% if first_char not in 'abcdefghijklmnopqrstuvwxyz' %} char-default{% endif %}">
+                  {{ first_char }}
+                </div>
+                <div class="user-info">
+                  <span class="user-name">@{{ managed_user.username }}</span>
+                  <span class="user-fullname">{{ managed_user.get_full_name|default:"No full name" }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="hide-mobile">{{ managed_user.email|default:"-" }}</td>
+            <td>
+              <span class="badge role-badge role-{{ managed_user.get_role_display|lower }}">
+                {{ managed_user.get_role_display }}
+              </span>
+            </td>
+            <td>
+              {% if managed_user.is_active %}
+                <span class="badge status-badge status-active">Active</span>
+              {% else %}
+                <span class="badge status-badge status-inactive">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a class="btn-edit" href="{% url 'user_update' managed_user.pk %}">
+                <i class="bi bi-pencil"></i> Edit
+              </a>
+            </td>
+          </tr>
+          {% endwith %}
+        {% empty %}
+          <tr>
+            <td colspan="5" class="empty-state">
+              <i class="bi bi-people"></i>
+              No users found{% if query %} matching "{{ query }}"{% endif %}.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+    <div class="pagination-wrap">
+      <span class="pagination-info">
+        Showing <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong> of <strong>{{ page_obj.paginator.count }}</strong>
+      </span>
+      <nav aria-label="Users pagination">
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Previous">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+            </li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active" aria-current="page">
+                <span class="page-link">{{ num }}</span>
+              </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+              </li>
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+              </li>
+            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'2' %}
+              <li class="page-ellipsis" aria-hidden="true">&hellip;</li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Next">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Something Went Wrong | LeadCRM{% endblock %}
+
+{% block content %}
+<section class="error-page">
+  <div class="error-card">
+    <div class="error-code">500</div>
+    <h1>Something went wrong</h1>
+    <p>The server could not complete the request. Please try again, or contact an administrator if it continues.</p>
+    <div class="d-flex flex-wrap gap-2 justify-content-center">
+      <a class="btn btn-primary" href="{% url 'lead_capture' %}"><i class="bi bi-house"></i> Public Form</a>
+      {% if user.is_authenticated %}
+        <a class="btn btn-outline-secondary" href="{% url 'dashboard' %}">Dashboard</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

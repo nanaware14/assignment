@@ -1,0 +1,746 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log | LeadCRM{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ══════════════════════════════════════
+     Page Header
+     ══════════════════════════════════════ */
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .page-header h1 {
+    color: var(--fg);
+    font-size: clamp(1.5rem, 3vw, 1.9rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin: 0 0 0.3rem;
+  }
+
+  .page-header p {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ══════════════════════════════════════
+     Section Panel
+     ══════════════════════════════════════ */
+  .section-panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+  }
+
+  /* ══════════════════════════════════════
+     Filter Bar
+     ══════════════════════════════════════ */
+  .filter-bar {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.01);
+  }
+
+  .filter-bar .form-label {
+    color: var(--fg-dim);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    transition: color 0.3s ease;
+  }
+
+  .filter-bar .form-group:focus-within .form-label {
+    color: var(--accent);
+  }
+
+  .filter-bar .form-control,
+  .filter-bar .form-select {
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    background: var(--input-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--fg);
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .filter-bar .form-control::placeholder {
+    color: rgba(138, 141, 155, 0.4);
+  }
+
+  .filter-bar .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238a8d9b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 2.25rem;
+    cursor: pointer;
+  }
+
+  .filter-bar .form-select option {
+    background: #161922;
+    color: var(--fg);
+  }
+
+  .filter-bar .form-control:focus,
+  .filter-bar .form-select:focus {
+    border-color: var(--border-focus);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 0 0 3px rgba(232, 168, 56, 0.1),
+      0 0 16px -5px var(--accent-glow);
+  }
+
+  /* Search input with icon */
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-wrap .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--fg-dim);
+    font-size: 0.85rem;
+    pointer-events: none;
+    transition: color 0.3s ease;
+  }
+
+  .search-wrap:focus-within .search-icon {
+    color: var(--accent);
+  }
+
+  .search-wrap .form-control {
+    padding-left: 2.4rem;
+  }
+
+  /* Apply button */
+  .btn-apply {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.15rem;
+    border: none;
+    border-radius: 10px;
+    color: var(--bg-deep);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 3px 14px var(--accent-glow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-apply::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+  }
+
+  .btn-apply:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(232, 168, 56, 0.35);
+  }
+
+  .btn-apply:hover::before {
+    transform: translateX(100%);
+  }
+
+  .btn-apply:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .btn-apply i {
+    font-size: 0.8rem;
+  }
+
+  /* Clear / Reset link */
+  .filter-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.6rem 0.85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--fg-muted);
+    background: transparent;
+    font-size: 0.82rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+  }
+
+  .filter-clear:hover {
+    color: var(--fg);
+    border-color: rgba(255, 255, 255, 0.12);
+    background: var(--bg-surface);
+  }
+
+  /* Active filter indicator */
+  .active-filters {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.15rem;
+    margin: 0 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    animation: fade-up 0.35s ease both;
+  }
+
+  .active-filters.visible {
+    display: flex;
+  }
+
+  .active-filters .filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 0.4rem;
+    border-radius: 6px;
+    background: var(--accent-subtle);
+    border: 1px solid rgba(232, 168, 56, 0.18);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .active-filters span {
+    color: var(--fg-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  /* ══════════════════════════════════════
+     Table
+     ══════════════════════════════════════ */
+  .section-panel .table {
+    margin: 0;
+    color: var(--fg);
+  }
+
+  .section-panel .table thead th {
+    color: var(--fg-dim);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    padding: 0.8rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.008);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .section-panel .table tbody td {
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.85rem;
+    vertical-align: middle;
+    transition: background 0.2s ease;
+  }
+
+  .section-panel .table tbody tr {
+    transition: background 0.25s ease;
+    animation: row-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .section-panel .table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .section-panel .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Description column — primary text */
+  .section-panel .table tbody td:nth-child(2) {
+    font-weight: 500;
+    color: var(--fg);
+    max-width: 360px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Lead column */
+  .section-panel .table tbody td:nth-child(3) {
+    color: var(--fg-muted);
+  }
+
+  /* Actor column */
+  .section-panel .table tbody td:nth-child(4) {
+    color: var(--fg-muted);
+    font-weight: 500;
+  }
+
+  /* Date column */
+  .section-panel .table tbody td:nth-child(5) {
+    color: var(--fg-dim);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Row stagger — up to 15 rows */
+  .section-panel .table tbody tr:nth-child(1)  { animation-delay: 0.2s; }
+  .section-panel .table tbody tr:nth-child(2)  { animation-delay: 0.25s; }
+  .section-panel .table tbody tr:nth-child(3)  { animation-delay: 0.3s; }
+  .section-panel .table tbody tr:nth-child(4)  { animation-delay: 0.35s; }
+  .section-panel .table tbody tr:nth-child(5)  { animation-delay: 0.4s; }
+  .section-panel .table tbody tr:nth-child(6)  { animation-delay: 0.45s; }
+  .section-panel .table tbody tr:nth-child(7)  { animation-delay: 0.5s; }
+  .section-panel .table tbody tr:nth-child(8)  { animation-delay: 0.55s; }
+  .section-panel .table tbody tr:nth-child(9)  { animation-delay: 0.6s; }
+  .section-panel .table tbody tr:nth-child(10) { animation-delay: 0.65s; }
+  .section-panel .table tbody tr:nth-child(11) { animation-delay: 0.7s; }
+  .section-panel .table tbody tr:nth-child(12) { animation-delay: 0.75s; }
+  .section-panel .table tbody tr:nth-child(13) { animation-delay: 0.8s; }
+  .section-panel .table tbody tr:nth-child(14) { animation-delay: 0.85s; }
+  .section-panel .table tbody tr:nth-child(15) { animation-delay: 0.9s; }
+
+  /* ── Activity Badges ── */
+  .activity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: capitalize;
+    border: 1px solid;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .activity-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Create */
+  .badge-create {
+    background: rgba(232, 168, 56, 0.08);
+    border-color: rgba(232, 168, 56, 0.2);
+    color: var(--accent);
+  }
+  .badge-create::before {
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+
+  /* Update */
+  .badge-update {
+    background: rgba(56, 152, 232, 0.08);
+    border-color: rgba(56, 152, 232, 0.2);
+    color: #5eaeff;
+  }
+  .badge-update::before {
+    background: #5eaeff;
+    box-shadow: 0 0 6px rgba(56, 152, 232, 0.3);
+  }
+
+  /* Status Change */
+  .badge-status_change {
+    background: rgba(168, 120, 255, 0.08);
+    border-color: rgba(168, 120, 255, 0.2);
+    color: #b888ff;
+  }
+  .badge-status_change::before {
+    background: #b888ff;
+    box-shadow: 0 0 6px rgba(168, 120, 255, 0.3);
+  }
+
+  /* Assign */
+  .badge-assign {
+    background: rgba(56, 201, 122, 0.08);
+    border-color: rgba(56, 201, 122, 0.2);
+    color: var(--success);
+  }
+  .badge-assign::before {
+    background: var(--success);
+    box-shadow: 0 0 6px rgba(56, 201, 122, 0.3);
+  }
+
+  /* Delete */
+  .badge-delete {
+    background: rgba(240, 80, 80, 0.08);
+    border-color: rgba(240, 80, 80, 0.2);
+    color: var(--danger);
+  }
+  .badge-delete::before {
+    background: var(--danger);
+    box-shadow: 0 0 6px rgba(240, 80, 80, 0.3);
+  }
+
+  /* ── Empty state ── */
+  .table tbody td.empty-state {
+    text-align: center;
+    padding: 3.5rem 1.5rem !important;
+    color: var(--fg-dim);
+    font-size: 0.9rem;
+    font-weight: 400;
+    border-bottom: none !important;
+  }
+
+  .table tbody td.empty-state i {
+    display: block;
+    font-size: 2.25rem;
+    margin-bottom: 0.85rem;
+    color: var(--fg-dim);
+    opacity: 0.35;
+  }
+
+  /* ══════════════════════════════════════
+     Pagination
+     ══════════════════════════════════════ */
+  .pagination-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    gap: 1rem;
+  }
+
+  .pagination-info {
+    color: var(--fg-dim);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .pagination-info strong {
+    color: var(--fg-muted);
+    font-weight: 600;
+  }
+
+  .pagination {
+    margin: 0;
+    gap: 0.3rem;
+  }
+
+  .pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg-muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    font-family: inherit;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .pagination .page-link:hover {
+    background: var(--bg-surface);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--fg);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--accent-subtle);
+    border-color: rgba(232, 168, 56, 0.25);
+    color: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(232, 168, 56, 0.08);
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: var(--fg-dim);
+    opacity: 0.35;
+    pointer-events: none;
+    border-color: var(--border-light);
+  }
+
+  .pagination .page-link:focus-visible {
+    box-shadow: 0 0 0 2px rgba(232, 168, 56, 0.3);
+    outline: none;
+  }
+
+  /* Ellipsis */
+  .pagination .page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    color: var(--fg-dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ══════════════════════════════════════
+     Animations
+     ══════════════════════════════════════ */
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes row-in {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* ══════════════════════════════════════
+     Responsive
+     ══════════════════════════════════════ */
+  @media (max-width: 991.98px) {
+    .filter-bar {
+      padding: 1rem 1.15rem;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .section-panel .table thead th,
+    .section-panel .table tbody td {
+      padding: 0.7rem 1rem;
+      font-size: 0.8rem;
+    }
+
+    .section-panel .table tbody td:nth-child(2) {
+      max-width: 180px;
+    }
+
+    /* Hide less-critical columns on small screens */
+    .hide-mobile {
+      display: none;
+    }
+
+    .pagination-wrap {
+      flex-direction: column;
+      padding: 0.85rem 1rem;
+    }
+
+    .pagination-info {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .filter-bar {
+      padding: 0.85rem;
+    }
+
+    .section-panel .table thead th,
+    .section-panel .table tbody td {
+      padding: 0.6rem 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    .section-panel .table tbody td:nth-child(2) {
+      max-width: 140px;
+    }
+  }
+
+  /* ══════════════════════════════════════
+     Reduced Motion
+     ══════════════════════════════════════ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <h1>Activity Log</h1>
+    <p>Audit trail for lead activity.</p>
+  </div>
+</div>
+
+<!-- Activity Table Panel -->
+<section class="section-panel">
+  <!-- Filter Bar -->
+  <form class="filter-bar" method="get">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-5 form-group">
+        <label class="form-label" for="q">Search</label>
+        <div class="search-wrap">
+          <i class="bi bi-search search-icon"></i>
+          <input class="form-control" id="q" name="q" value="{{ query }}" placeholder="Description, lead, user">
+        </div>
+      </div>
+      <div class="col-md-3 form-group">
+        <label class="form-label" for="action">Action</label>
+        <select class="form-select" id="action" name="action">
+          <option value="">All</option>
+          {% for value, label in action_choices %}
+            <option value="{{ value }}" {% if selected_action == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto d-flex gap-2">
+        <button class="btn-apply" type="submit">
+          <i class="bi bi-funnel"></i> Apply
+        </button>
+        {% if query or selected_action %}
+          <a class="filter-clear" href="?">
+            <i class="bi bi-x-lg"></i> Clear
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+  <!-- Active filter indicator -->
+  <div class="active-filters {% if query or selected_action %}visible{% endif %}">
+    <span class="filter-count">{% if query %}1{% else %}0{% endif %}{% if query and selected_action %}+{% endif %}{% if selected_action %}1{% endif %}</span>
+    <span>Filters active</span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th style="width:130px">Action</th>
+          <th>Description</th>
+          <th class="hide-mobile" style="width:160px">Lead</th>
+          <th style="width:140px">Actor</th>
+          <th style="width:150px">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for activity in page_obj %}
+          <tr>
+            <td>
+              <span class="badge activity-badge badge-{{ activity.action|default:'create' }}">
+                {{ activity.get_action_display }}
+              </span>
+            </td>
+            <td>{{ activity.description }}</td>
+            <td class="hide-mobile">{{ activity.lead|default:"-" }}</td>
+            <td>{{ activity.actor|default:"System" }}</td>
+            <td>{{ activity.created_at|date:"M d, Y H:i" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="empty-state">
+              <i class="bi bi-clock-history"></i>
+              No activity found{% if query or selected_action %} matching your filters{% endif %}.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+    <div class="pagination-wrap">
+      <span class="pagination-info">
+        Showing <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong> of <strong>{{ page_obj.paginator.count }}</strong>
+      </span>
+      <nav aria-label="Activity log pagination">
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}" aria-label="Previous">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+            </li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active" aria-current="page">
+                <span class="page-link">{{ num }}</span>
+              </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}">{{ num }}</a>
+              </li>
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}">{{ num }}</a>
+              </li>
+            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'2' %}
+              <li class="page-ellipsis" aria-hidden="true">&hellip;</li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}" aria-label="Next">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

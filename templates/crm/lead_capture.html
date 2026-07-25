@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block title %}Lead Capture | LeadCRM{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --bg-deep: #0a0c10;
+    --bg-card: rgba(16, 19, 28, 0.75);
+    --fg: #f0f0f2;
+    --fg-muted: #8a8d9b;
+    --accent: #e8a838;
+    --accent-hover: #f0be5e;
+    --accent-glow: rgba(232, 168, 56, 0.25);
+    --accent-subtle: rgba(232, 168, 56, 0.08);
+    --border: rgba(255, 255, 255, 0.07);
+    --border-focus: rgba(232, 168, 56, 0.5);
+    --input-bg: rgba(255, 255, 255, 0.04);
+    --danger: #f05050;
+    --danger-bg: rgba(240, 80, 80, 0.1);
+    --danger-border: rgba(240, 80, 80, 0.25);
+    --success: #38c97a;
+  }
+
+  /* ── Section base ── */
+  .public-hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-deep);
+    padding: 4rem 0;
+  }
+
+  .public-hero > .container {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Background layers ── */
+  .public-hero::before,
+  .public-hero::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    animation: drift 20s ease-in-out infinite alternate;
+  }
+
+  .public-hero::before {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(232, 168, 56, 0.3), transparent 70%);
+    top: -20%;
+    left: -10%;
+  }
+
+  .public-hero::after {
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(56, 200, 122, 0.15), transparent 70%);
+    bottom: -15%;
+    right: -5%;
+    animation-delay: -9s;
+    animation-duration: 25s;
+  }
+
+  @keyframes drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-30px, 25px) scale(1.08); }
+    100% { transform: translate(15px, -15px) scale(0.95); }
+  }
+
+  .hero-noise {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 70px 70px;
+    mask-image: radial-gradient(ellipse 70% 60% at 60% 50%, black 10%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 60% 50%, black 10%, transparent 100%);
+    opacity: 0.45;
+  }
+
+  /* ── Floating particles ── */
+  .h-particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    animation: float-up linear infinite;
+  }
+
+  .h-particle:nth-child(1)  { left: 8%;  animation-duration: 16s; animation-delay: 0s; }
+  .h-particle:nth-child(2)  { left: 20%; animation-duration: 20s; animation-delay: -5s; width: 2px; height: 2px; background: var(--success); }
+  .h-particle:nth-child(3)  { left: 38%; animation-duration: 13s; animation-delay: -8s; }
+  .h-particle:nth-child(4)  { left: 52%; animation-duration: 18s; animation-delay: -3s; width: 2px; height: 2px; }
+  .h-particle:nth-child(5)  { left: 70%; animation-duration: 22s; animation-delay: -11s; background: var(--success); }
+  .h-particle:nth-child(6)  { left: 85%; animation-duration: 15s; animation-delay: -6s; width: 2px; height: 2px; }
+  .h-particle:nth-child(7)  { left: 30%; animation-duration: 24s; animation-delay: -14s; }
+  .h-particle:nth-child(8)  { left: 65%; animation-duration: 17s; animation-delay: -9s; width: 2px; height: 2px; background: var(--success); }
+  .h-particle:nth-child(9)  { left: 92%; animation-duration: 19s; animation-delay: -2s; }
+  .h-particle:nth-child(10) { left: 48%; animation-duration: 21s; animation-delay: -13s; width: 2px; height: 2px; }
+
+  @keyframes float-up {
+    0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+    8%   { opacity: 0.5; }
+    85%  { opacity: 0.2; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
+
+  /* ── Left column ── */
+  .hero-left {
+    animation: slide-in-left 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  }
+
+  @keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-40px); filter: blur(4px); }
+    to   { opacity: 1; transform: translateX(0);     filter: blur(0); }
+  }
+
+  .eyebrow {
+    display: inline-block;
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    background: var(--accent-subtle);
+    border: 1px solid rgba(232, 168, 56, 0.18);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-left h1 {
+    color: var(--fg);
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+
+  .hero-left h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-left .lead {
+    color: var(--fg-muted);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    font-weight: 400;
+    margin-bottom: 2.25rem;
+    max-width: 420px;
+  }
+
+  /* ── Proof points ── */
+  .hero-proof {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .hero-proof > div {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: default;
+  }
+
+  .hero-proof > div:hover {
+    background: var(--accent-subtle);
+    border-color: rgba(232, 168, 56, 0.2);
+    transform: translateX(6px);
+  }
+
+  .hero-proof > div i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent-subtle);
+    color: var(--accent);
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: all 0.35s ease;
+  }
+
+  .hero-proof > div:hover i {
+    background: rgba(232, 168, 56, 0.18);
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
+
+  .hero-proof > div span {
+    color: var(--fg);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Stagger proof animations */
+  .hero-proof > div:nth-child(1) { animation: proof-in 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
+  .hero-proof > div:nth-child(2) { animation: proof-in 0.7s cubic-bezier(0.16,1,0.3,1) 0.55s both; }
+  .hero-proof > div:nth-child(3) { animation: proof-in 0.7s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
+
+  @keyframes proof-in {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── Form panel ── */
+  .form-panel {
+    background: var(--bg-card);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.03) inset,
+      0 30px 80px -20px rgba(0,0,0,0.55),
+      0 0 80px -15px var(--accent-glow);
+    animation: card-enter 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+  }
+
+  @keyframes card-enter {
+    from { opacity: 0; transform: translateY(35px) scale(0.97); filter: blur(6px); }
+    to   { opacity: 1; transform: translateY(0) scale(1);     filter: blur(0); }
+  }
+
+  /* ── Form fields ── */
+  .form-panel .form-label {
+    color: var(--fg-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.45rem;
+    transition: color 0.3s ease;
+  }
+
+  .form-panel .form-group:focus-within .form-label {
+    color: var(--accent);
+  }
+
+  .form-panel .form-control,
+  .form-panel input[type="text"],
+  .form-panel input[type="email"],
+  .form-panel input[type="tel"],
+  .form-panel input[type="url"],
+  .form-panel input[type="number"],
+  .form-panel select,
+  .form-panel textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--input-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: var(--fg);
+    font-size: 0.92rem;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    resize: vertical;
+  }
+
+  .form-panel select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238a8d9b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 2.5rem;
+  }
+
+  .form-panel select option {
+    background: #161922;
+    color: var(--fg);
+  }
+
+  .form-panel textarea {
+    min-height: 110px;
+  }
+
+  .form-panel input::placeholder,
+  .form-panel textarea::placeholder {
+    color: rgba(138, 141, 155, 0.45);
+  }
+
+  .form-panel input:focus,
+  .form-panel select:focus,
+  .form-panel textarea:focus {
+    border-color: var(--border-focus);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 0 0 3px rgba(232, 168, 56, 0.1),
+      0 0 20px -5px var(--accent-glow);
+  }
+
+  /* ── Field errors ── */
+  .form-panel .invalid-feedback {
+    color: var(--danger);
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 0.35rem;
+    padding-left: 0.15rem;
+  }
+
+  /* ── Non-field errors alert ── */
+  .form-panel .alert-danger {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    border-radius: 12px;
+    padding: 0.85rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .form-panel .alert-danger::before {
+    content: '';
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 8px var(--danger);
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+  }
+
+  /* ── Submit button ── */
+  .btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: inherit;
+    letter-spacing: 0.01em;
+    color: var(--bg-deep);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .btn-submit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.22) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 36px rgba(232, 168, 56, 0.4);
+  }
+
+  .btn-submit:hover::before {
+    transform: translateX(100%);
+  }
+
+  .btn-submit:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 10px var(--accent-glow);
+  }
+
+  .btn-submit i {
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+  }
+
+  .btn-submit:hover i {
+    transform: translateX(3px) translateY(-2px);
+  }
+
+  /* ── Decorative connector line between columns ── */
+  .connector-line {
+    display: none;
+  }
+
+  @media (min-width: 992px) {
+    .connector-line {
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: calc(41.666% + 1rem);
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-glow), transparent);
+      z-index: 3;
+      animation: line-grow 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+      transform-origin: left center;
+    }
+
+    .connector-line::after {
+      content: '';
+      position: absolute;
+      right: -3px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+      animation: dot-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes line-grow {
+      from { transform: scaleX(0); opacity: 0; }
+      to   { transform: scaleX(1); opacity: 1; }
+    }
+
+    @keyframes dot-pulse {
+      0%, 100% { box-shadow: 0 0 10px var(--accent-glow); }
+      50%      { box-shadow: 0 0 20px rgba(232,168,56,0.5); }
+    }
+  }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 991px) {
+    .hero-left {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .hero-left .lead {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-proof {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+    .hero-proof > div {
+      flex: 0 0 auto;
+    }
+  }
+
+  @media (max-width: 575px) {
+    .form-panel {
+      padding: 1.75rem 1.25rem;
+      border-radius: 16px;
+    }
+    .hero-proof {
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="public-hero">
+  <!-- Background layers -->
+  <div class="hero-noise"></div>
+  <div class="hero-grid"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+  <div class="h-particle"></div>
+
+  <!-- Decorative connector -->
+  <div class="connector-line"></div>
+
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <!-- Left: Copy & proof -->
+      <div class="col-lg-5 hero-left">
+        <span class="eyebrow">Lead Intake</span>
+        <h1 class="fw-bold">Tell us about your <span>requirement</span></h1>
+        <p class="lead">Submit your details and the team will follow up with the next step.</p>
+        <div class="hero-proof">
+          <div>
+            <i class="bi bi-lightning-charge-fill"></i>
+            <span>Fast routing</span>
+          </div>
+          <div>
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Secure submission</span>
+          </div>
+          <div>
+            <i class="bi bi-clipboard2-check-fill"></i>
+            <span>Tracked follow-up</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Form -->
+      <div class="col-lg-7">
+        <div class="form-panel">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="row g-3">
+              {% for field in form %}
+                <div class="form-group {% if field.name == 'message' or field.name == 'notes' or field.name == 'description' %}col-12{% else %}col-md-6{% endif %}">
+                  <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  {{ field }}
+                  {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+              <button class="btn-submit" type="submit">
+                <i class="bi bi-send-fill"></i>
+                Submit Lead
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

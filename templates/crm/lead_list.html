@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Leads | LeadCRM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Leads</h1>
+    <p>{% if user.is_admin_role %}All captured and managed leads.{% else %}Your assigned leads.{% endif %}</p>
+  </div>
+  {% if user.is_admin_role %}
+    <a class="btn btn-primary" href="{% url 'lead_create' %}"><i class="bi bi-plus-lg"></i> New Lead</a>
+  {% endif %}
+</div>
+
+<section class="section-panel">
+  <form class="row g-2 align-items-end mb-3" method="get">
+    <div class="col-md-4">
+      <label class="form-label" for="q">Search</label>
+      <input class="form-control" id="q" name="q" value="{{ query }}" placeholder="Name, email, company">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" for="status">Status</label>
+      <select class="form-select" id="status" name="status">
+        <option value="">All</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" for="priority">Priority</label>
+      <select class="form-select" id="priority" name="priority">
+        <option value="">All</option>
+        {% for value, label in priority_choices %}
+          <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" for="source">Source</label>
+      <input class="form-control" id="source" name="source" value="{{ source }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" for="ordering">Sort</label>
+      <select class="form-select" id="ordering" name="ordering">
+        <option value="-created_at" {% if ordering == "-created_at" %}selected{% endif %}>Newest</option>
+        <option value="created_at" {% if ordering == "created_at" %}selected{% endif %}>Oldest</option>
+        <option value="full_name" {% if ordering == "full_name" %}selected{% endif %}>Name A-Z</option>
+        <option value="-updated_at" {% if ordering == "-updated_at" %}selected{% endif %}>Recently Updated</option>
+      </select>
+    </div>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Apply</button>
+      <a class="btn btn-outline-secondary" href="{% url 'lead_list' %}">Reset</a>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Assigned</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lead in page_obj %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ lead.full_name }}</div>
+              <small class="text-secondary">{{ lead.email }}</small>
+            </td>
+            <td>{{ lead.company|default:"-" }}</td>
+            <td><span class="badge status-badge status-{{ lead.status|lower }}">{{ lead.get_status_display }}</span></td>
+            <td><span class="priority-dot priority-{{ lead.priority|lower }}"></span>{{ lead.get_priority_display }}</td>
+            <td>{{ lead.assigned_to|default:"Unassigned" }}</td>
+            <td>{{ lead.created_at|date:"M d, Y" }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{{ lead.get_absolute_url }}">Open</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="text-secondary">No leads found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "includes/pagination.html" %}
+</section>
+{% endblock %}

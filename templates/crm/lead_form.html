@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | LeadCRM{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ══════════════════════════════════════
+     Page Header
+     ══════════════════════════════════════ */
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .page-header h1 {
+    color: var(--fg);
+    font-size: clamp(1.5rem, 3vw, 1.9rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin: 0 0 0.3rem;
+  }
+
+  .page-header p {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Cancel button */
+  .btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--fg-muted);
+    background: transparent;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+  }
+
+  .btn-cancel i {
+    font-size: 0.8rem;
+    transition: transform 0.25s ease;
+  }
+
+  .btn-cancel:hover {
+    color: var(--fg);
+    border-color: rgba(255, 255, 255, 0.14);
+    background: var(--bg-surface);
+  }
+
+  .btn-cancel:hover i {
+    transform: translateX(-2px);
+  }
+
+  /* ══════════════════════════════════════
+     Form Panel
+     ══════════════════════════════════════ */
+  .section-panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+  }
+
+  .form-body {
+    padding: 2rem 2rem 2.25rem;
+  }
+
+  /* ── Non-field errors ── */
+  .form-body .alert-danger {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.9rem 1.15rem;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    border-radius: 12px;
+    color: var(--danger);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1.75rem;
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    line-height: 1.5;
+  }
+
+  .form-body .alert-danger i {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+  }
+
+  /* ══════════════════════════════════════
+     Form Groups
+     ══════════════════════════════════════ */
+  .form-group {
+    margin-bottom: 0;
+    position: relative;
+  }
+
+  .form-group .form-label {
+    display: block;
+    color: var(--fg-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.45rem;
+    transition: color 0.3s ease;
+  }
+
+  .form-group:focus-within .form-label {
+    color: var(--accent);
+  }
+
+  /* Required indicator */
+  .form-group .form-label .required {
+    color: var(--danger);
+    margin-left: 2px;
+    font-weight: 700;
+  }
+
+  /* ── All input types ── */
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="tel"],
+  .form-group input[type="url"],
+  .form-group input[type="number"],
+  .form-group input[type="date"],
+  .form-group input[type="datetime-local"],
+  .form-group select,
+  .form-group textarea,
+  .form-group .form-control {
+    width: 100%;
+    padding: 0.72rem 0.95rem;
+    background: var(--input-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--fg);
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .form-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238a8d9b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+
+  .form-group select option {
+    background: #161922;
+    color: var(--fg);
+  }
+
+  .form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: rgba(138, 141, 155, 0.4);
+  }
+
+  /* Normal focus */
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--border-focus);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 0 0 3px rgba(232, 168, 56, 0.1),
+      0 0 20px -5px var(--accent-glow);
+  }
+
+  /* Invalid state */
+  .form-group input.is-invalid,
+  .form-group select.is-invalid,
+  .form-group textarea.is-invalid {
+    border-color: var(--danger-border);
+    background: rgba(240, 80, 80, 0.03);
+  }
+
+  .form-group input.is-invalid:focus,
+  .form-group select.is-invalid:focus,
+  .form-group textarea.is-invalid:focus {
+    border-color: var(--danger-border);
+    box-shadow:
+      0 0 0 3px rgba(240, 80, 80, 0.08),
+      0 0 16px -5px rgba(240, 80, 80, 0.15);
+  }
+
+  .form-group:has(.is-invalid) .form-label {
+    color: var(--danger);
+  }
+
+  /* ── Help text ── */
+  .form-group .form-text {
+    color: var(--fg-dim);
+    font-size: 0.75rem;
+    font-weight: 400;
+    margin-top: 0.35rem;
+    line-height: 1.45;
+    padding-left: 0.1rem;
+  }
+
+  /* ── Invalid feedback ── */
+  .form-group .invalid-feedback {
+    color: var(--danger);
+    font-size: 0.78rem;
+    font-weight: 500;
+    margin-top: 0.35rem;
+    padding-left: 0.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .form-group .invalid-feedback::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--danger);
+    flex-shrink: 0;
+    margin-top: 0.5px;
+  }
+
+  /* ── Form group stagger ── */
+  .form-group {
+    animation: field-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .form-group:nth-child(1)  { animation-delay: 0.2s; }
+  .form-group:nth-child(2)  { animation-delay: 0.27s; }
+  .form-group:nth-child(3)  { animation-delay: 0.34s; }
+  .form-group:nth-child(4)  { animation-delay: 0.41s; }
+  .form-group:nth-child(5)  { animation-delay: 0.48s; }
+  .form-group:nth-child(6)  { animation-delay: 0.55s; }
+  .form-group:nth-child(7)  { animation-delay: 0.62s; }
+  .form-group:nth-child(8)  { animation-delay: 0.69s; }
+  .form-group:nth-child(9)  { animation-delay: 0.76s; }
+  .form-group:nth-child(10) { animation-delay: 0.83s; }
+  .form-group:nth-child(11) { animation-delay: 0.9s; }
+  .form-group:nth-child(12) { animation-delay: 0.97s; }
+
+  @keyframes field-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+      filter: blur(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  /* ══════════════════════════════════════
+     Form Actions
+     ══════════════════════════════════════ */
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.05s both;
+  }
+
+  .btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.6rem;
+    border: none;
+    border-radius: 10px;
+    color: var(--bg-deep);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .btn-save::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.22) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  .btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(232, 168, 56, 0.4);
+  }
+
+  .btn-save:hover::before {
+    transform: translateX(100%);
+  }
+
+  .btn-save:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 10px var(--accent-glow);
+  }
+
+  .btn-save i {
+    font-size: 0.85rem;
+    transition: transform 0.3s ease;
+  }
+
+  .btn-save:hover i {
+    transform: scale(1.1);
+  }
+
+  /* Loading state */
+  .btn-save.loading {
+    pointer-events: none;
+    opacity: 0.85;
+  }
+
+  .btn-save.loading i {
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* ══════════════════════════════════════
+     Animations
+     ══════════════════════════════════════ */
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  /* ══════════════════════════════════════
+     Responsive
+     ══════════════════════════════════════ */
+  @media (max-width: 991.98px) {
+    .form-body {
+      padding: 1.5rem 1.5rem 1.75rem;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .form-body {
+      padding: 1.25rem 1.15rem 1.5rem;
+    }
+
+    .form-actions {
+      flex-direction: column-reverse;
+      gap: 0.6rem;
+    }
+
+    .btn-save,
+    .form-actions .btn-cancel {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .form-body {
+      padding: 1rem 0.85rem 1.25rem;
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+    }
+  }
+
+  /* ══════════════════════════════════════
+     Reduced Motion
+     ══════════════════════════════════════ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <h1>{{ title }}</h1>
+    <p>Maintain accurate lead and assignment information.</p>
+  </div>
+  <a class="btn-cancel" href="{% if lead %}{{ lead.get_absolute_url }}{% else %}{% url 'lead_list' %}{% endif %}">
+    <i class="bi bi-arrow-left"></i> Cancel
+  </a>
+</div>
+
+<!-- Form Panel -->
+<section class="section-panel">
+  <div class="form-body">
+    <form method="post" novalidate id="lead-form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <div>{{ form.non_field_errors }}</div>
+        </div>
+      {% endif %}
+
+      <div class="row g-3">
+        {% for field in form %}
+          <div class="form-group {% if field.name == 'message' or field.name == 'notes' or field.name == 'description' %}col-12{% else %}col-md-6{% endif %}">
+            <label class="form-label" for="{{ field.id_for_label }}">
+              {{ field.label }}
+              {% if field.field.required %}<span class="required">*</span>{% endif %}
+            </label>
+            {{ field }}
+            {% if field.help_text %}
+              <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="form-actions">
+        <a class="btn-cancel" href="{% if lead %}{{ lead.get_absolute_url }}{% else %}{% url 'lead_list' %}{% endif %}">
+          Cancel
+        </a>
+        <button class="btn-save" type="submit" id="save-btn">
+          <i class="bi bi-check-lg"></i>
+          Save Lead
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+  // Add loading state to save button on submit
+  document.getElementById('lead-form').addEventListener('submit', function() {
+    const btn = document.getElementById('save-btn');
+    if (!btn.classList.contains('loading')) {
+      btn.classList.add('loading');
+      btn.querySelector('i').className = 'bi bi-arrow-repeat';
+      // Prevent double-submit by disabling
+      btn.style.pointerEvents = 'none';
+    }
+  });
+
+  // Add is-invalid class to fields that have errors on page load
+  document.querySelectorAll('.form-group .invalid-feedback.d-block').forEach(function(err) {
+    const input = err.closest('.form-group').querySelector('input, select, textarea');
+    if (input) input.classList.add('is-invalid');
+  });
+</script>
+{% endblock %}
